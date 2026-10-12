@@ -27,6 +27,10 @@ jobs:
           gradle-version: '8.9'
       - name: Build APK
         run: gradle :app:assembleDebug --no-daemon --stacktrace
+      - name: Verify APK signature
+        run: |
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose app/build/outputs/apk/debug/app-debug.apk
+          ls -lh app/build/outputs/apk/debug/app-debug.apk
       - uses: actions/upload-artifact@v4
         with:
           name: BODYLOG-installable-APK
