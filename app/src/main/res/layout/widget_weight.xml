@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/widget_root" android:orientation="vertical" android:background="#FFFFFF" android:padding="12dp" android:layout_width="match_parent" android:layout_height="match_parent">
+<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BODYLOG · 체중" android:textSize="12sp" android:textColor="#666999"/>
+<TextView android:id="@+id/widget_weight" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="— kg" android:textColor="#23243A" android:textStyle="bold" android:textSize="25sp" android:paddingTop="3dp"/>
+<TextView android:id="@+id/widget_delta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="체중을 기록해 주세요" android:textSize="11sp" android:textColor="#15916D"/>
+<ImageView android:id="@+id/widget_chart" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:scaleType="fitXY" android:contentDescription="7일 체중 변화 그래프"/>
+</LinearLayout>
