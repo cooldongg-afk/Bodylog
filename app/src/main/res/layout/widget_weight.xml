@@ -1,7 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:id="@+id/widget_root" android:orientation="vertical" android:background="#FFFFFF" android:padding="12dp" android:layout_width="match_parent" android:layout_height="match_parent">
-<TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="BODYLOG · 체중" android:textSize="12sp" android:textColor="#666999"/>
-<TextView android:id="@+id/widget_weight" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="— kg" android:textColor="#23243A" android:textStyle="bold" android:textSize="25sp" android:paddingTop="3dp"/>
-<TextView android:id="@+id/widget_delta" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="체중을 기록해 주세요" android:textSize="11sp" android:textColor="#15916D"/>
-<ImageView android:id="@+id/widget_chart" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:scaleType="fitXY" android:contentDescription="7일 체중 변화 그래프"/>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+ android:id="@+id/widget_root" android:layout_width="match_parent" android:layout_height="match_parent"
+ android:orientation="vertical" android:background="@drawable/widget_opaque" android:paddingLeft="11dp"
+ android:paddingTop="9dp" android:paddingRight="11dp" android:paddingBottom="8dp">
+ <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical">
+  <TextView android:id="@+id/widget_title" android:layout_width="0dp" android:layout_weight="1" android:layout_height="wrap_content" android:text="BODYLOG · 체중" android:textSize="11sp" android:textColor="#6B6D92" android:singleLine="true"/>
+  <TextView android:id="@+id/widget_mode" android:layout_width="32dp" android:layout_height="30dp"
+   android:gravity="center" android:contentDescription="위젯 배경 전환" android:text="◐" android:textSize="17sp" android:textColor="#6B6D92"/>
+ </LinearLayout>
+ <TextView android:id="@+id/widget_weight" android:layout_width="match_parent" android:layout_height="wrap_content"
+ android:text="— kg" android:textColor="#24263B" android:textStyle="bold" android:textSize="24sp" android:singleLine="true"/>
+ <TextView android:id="@+id/widget_delta" android:layout_width="match_parent" android:layout_height="wrap_content"
+ android:text="체중을 기록해 주세요" android:textSize="11sp" android:textColor="#179876" android:singleLine="true"/>
+ <ImageView android:id="@+id/widget_chart" android:layout_width="match_parent" android:layout_height="0dp"
+ android:layout_weight="1" android:scaleType="fitXY" android:contentDescription="최근 7일 체중 변화 꺾은선 그래프"/>
 </LinearLayout>
