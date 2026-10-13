@@ -1,0 +1,17 @@
+# Never commit private Android app signing material or user data
+*.jks
+*.keystore
+*.p12
+*KEYSTORE_B64*.txt
+*SIGNING_PASSWORD*.txt
+*.apk
+*.zip
+.gradle/
+build/
+app/build/
+local.properties
+.idea/
+*.iml
+body_photos/
+*_backup.json
+*_photos.zip
