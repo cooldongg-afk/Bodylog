@@ -1,7 +1,39 @@
 plugins { id 'com.android.application' }
+
 android {
     namespace 'com.bodylog.personal'
     compileSdk 35
-    defaultConfig { applicationId 'com.bodylog.personal.v9'; minSdk 26; targetSdk 34; versionCode 9; versionName '0.9' }
-    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+
+    defaultConfig {
+        // PERMANENT app ID. Never change after first stable release.
+        applicationId 'com.bodylog.personal.stable'
+        minSdk 26
+        targetSdk 34
+        versionCode 100
+        versionName '1.0.0'
+    }
+
+    signingConfigs {
+        release {
+            // Keystore material lives ONLY in repository Actions secrets, never Git.
+            storeFile file(System.getenv('BODYLOG_KEYSTORE_PATH') ?: 'missing-release-key.p12')
+            storePassword System.getenv('BODYLOG_SIGNING_PASSWORD') ?: ''
+            keyAlias 'bodylog-release'
+            keyPassword System.getenv('BODYLOG_SIGNING_PASSWORD') ?: ''
+            storeType 'pkcs12'
+            enableV1Signing true
+            enableV2Signing true
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.release
+            minifyEnabled false
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
 }
