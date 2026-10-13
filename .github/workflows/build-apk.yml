@@ -34,6 +34,14 @@ jobs:
           printf '%s' "$BODYLOG_KEYSTORE_B64" | base64 --decode > "$RUNNER_TEMP/bodylog-release.p12"
           echo "BODYLOG_KEYSTORE_PATH=$RUNNER_TEMP/bodylog-release.p12" >> "$GITHUB_ENV"
           keytool -list -keystore "$RUNNER_TEMP/bodylog-release.p12" -storetype PKCS12 -storepass "$BODYLOG_SIGNING_PASSWORD" -alias bodylog-release > /dev/null
+          # Pin the public signing-certificate fingerprint so accidental key
+          # replacement cannot break in-place user-data-preserving upgrades.
+          CERT_SHA256=$(keytool -list -v -keystore "$RUNNER_TEMP/bodylog-release.p12" -storetype PKCS12 -storepass "$BODYLOG_SIGNING_PASSWORD" -alias bodylog-release | sed -n 's/.*SHA256: //p' | head -n 1)
+          EXPECTED="DA:35:07:30:9E:CF:EA:34:D9:B1:10:CC:F4:C9:51:DE:58:14:F5:5D:38:CF:67:96:D1:5A:73:FA:D3:7F:4F:B9"
+          if [ "$CERT_SHA256" != "$EXPECTED" ]; then
+            echo "::error::BODYLOG release signing certificate changed. Refusing to publish an APK that cannot update existing installs."
+            exit 1
+          fi
 
       - name: Install Android SDK
         shell: bash
