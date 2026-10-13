@@ -11,6 +11,20 @@ public class MainActivity extends Activity{
  setContentView(web);web.loadUrl("file:///android_asset/index.html");
  }
  public class Bridge{
+ // Mirror the JSON diary/fasting/weight state in private Android storage. WebView
+ // localStorage is still the primary record source; backup helps recovery after
+ // a WebView storage migration between app versions.
+ @JavascriptInterface public void saveUserState(String json){
+  if(json==null||json.length()>2000000)return;
+  try{
+   org.json.JSONObject obj=new org.json.JSONObject(json);
+   if(obj.optJSONArray("weights")==null||obj.optJSONObject("logs")==null||obj.optJSONArray("diaries")==null)return;
+   getSharedPreferences("bodylog_state_backup",MODE_PRIVATE).edit().putString("state_v1",json).apply();
+  }catch(Exception ignored){}
+ }
+ @JavascriptInterface public String restoreUserState(){
+  return getSharedPreferences("bodylog_state_backup",MODE_PRIVATE).getString("state_v1","");
+ }
  @JavascriptInterface public void syncWeights(String json){if(json==null||json.length()>350000)return;try{org.json.JSONObject o=new org.json.JSONObject(json);if(o.optJSONArray("weights")==null)return;getSharedPreferences(WeightWidgetProvider.PREFS,MODE_PRIVATE).edit().putString(WeightWidgetProvider.DATA,json).apply();runOnUiThread(()->WeightWidgetProvider.refreshAll(MainActivity.this));}catch(Exception ignored){}}
  @JavascriptInterface public String listPhotos(){return BodyPhotoStore.all(MainActivity.this);}
  @JavascriptInterface public String photoImage(String id,int side){return BodyPhotoStore.imageData(MainActivity.this,id,Math.max(200,Math.min(1100,side)));}
