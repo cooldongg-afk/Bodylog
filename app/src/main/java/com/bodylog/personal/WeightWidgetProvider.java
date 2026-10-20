@@ -18,7 +18,16 @@ import java.util.*;
 public class WeightWidgetProvider extends AppWidgetProvider {
  public static final String PREFS="bodylog_widget", DATA="weights_state";
  private static final String STYLE="style_";
+ // Days: 0 means all historical measurements.
+ private static final String RANGE="range_";
+ private static final int[] PERIODS={7,30,90,0};
  private static final String TOGGLE="com.bodylog.personal.WIDGET_TOGGLE_STYLE";
+ private static final String CHANGE_PERIOD="com.bodylog.personal.WIDGET_CHANGE_PERIOD";
+ private static String rangeName(int days){return days==0?"전체":days+"일";}
+ private static int validRange(int days){
+  for(int n:PERIODS)if(days==n)return days;
+  return 7;  // Existing installed widgets default to the former 7-day view.
+ }
  private static final int PURPLE=0xff6565f5, AQUA=0xff54e8d7, GREEN=0xff179876;
  private static class Point {
   final LocalDate date; final double kg;
@@ -26,12 +35,22 @@ public class WeightWidgetProvider extends AppWidgetProvider {
  }
  @Override public void onReceive(Context c,Intent i){
   super.onReceive(c,i);
-  if(!TOGGLE.equals(i.getAction()))return;
+  String action=i.getAction();
+  if(!TOGGLE.equals(action)&&!CHANGE_PERIOD.equals(action))return;
   int id=i.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,AppWidgetManager.INVALID_APPWIDGET_ID);
   if(id==AppWidgetManager.INVALID_APPWIDGET_ID)return;
   SharedPreferences p=c.getSharedPreferences(PREFS,Context.MODE_PRIVATE);
-  int next=(p.getInt(STYLE+id,0)+1)%3;
-  p.edit().putInt(STYLE+id,next).apply();
+  if(CHANGE_PERIOD.equals(action)){
+   int current=validRange(p.getInt(RANGE+id,7));
+   int next=PERIODS[0];
+   for(int k=0;k<PERIODS.length;k++){
+    if(PERIODS[k]==current){next=PERIODS[(k+1)%PERIODS.length];break;}
+   }
+   p.edit().putInt(RANGE+id,next).apply();
+  }else{
+   int next=(p.getInt(STYLE+id,0)+1)%3;
+   p.edit().putInt(STYLE+id,next).apply();
+  }
   draw(c,AppWidgetManager.getInstance(c),id);
  }
  @Override public void onUpdate(Context c,AppWidgetManager mgr,int[] ids){
@@ -42,7 +61,8 @@ public class WeightWidgetProvider extends AppWidgetProvider {
  }
  @Override public void onDeleted(Context c,int[] ids){
   SharedPreferences.Editor e=c.getSharedPreferences(PREFS,0).edit();
-  for(int id:ids)e.remove(STYLE+id);e.apply();super.onDeleted(c,ids);
+  for(int id:ids){e.remove(STYLE+id);e.remove(RANGE+id);}
+  e.apply();super.onDeleted(c,ids);
  }
  public static void refreshAll(Context c){
   AppWidgetManager mgr=AppWidgetManager.getInstance(c);
@@ -113,7 +133,10 @@ public class WeightWidgetProvider extends AppWidgetProvider {
  }
  private static void draw(Context c,AppWidgetManager mgr,int id){
   RemoteViews v=new RemoteViews(c.getPackageName(),R.layout.widget_weight);
-  int mode=c.getSharedPreferences(PREFS,0).getInt(STYLE+id,0);
+  SharedPreferences prefs=c.getSharedPreferences(PREFS,0);
+  int mode=prefs.getInt(STYLE+id,0);
+  int period=validRange(prefs.getInt(RANGE+id,7));
+  String periodTitle=rangeName(period);
   boolean darkWallpaper=mode==1;
   int text=darkWallpaper?0xffFFFFFF:0xff24263B;
   int muted=darkWallpaper?0xffE4E8F5:0xff6B6D92;
@@ -122,19 +145,22 @@ public class WeightWidgetProvider extends AppWidgetProvider {
   v.setTextColor(R.id.widget_weight,text);
   v.setTextColor(R.id.widget_mode,muted);
   v.setTextViewText(R.id.widget_mode,mode==0?"◐":mode==1?"☀":"☾");
+  v.setTextViewText(R.id.widget_range,periodTitle);
+  v.setTextColor(R.id.widget_range,darkWallpaper?AQUA:0xff575AE7);
+  v.setContentDescription(R.id.widget_range,"그래프 기간 "+periodTitle+". 누르면 7일, 30일, 90일, 전체 중 다음 기간으로 변경합니다.");
   ArrayList<Point> all=load(c);
   ArrayList<Point> recent=new ArrayList<>();
-  LocalDate cutoff=LocalDate.now().minusDays(6);
+  LocalDate cutoff=period==0?LocalDate.MIN:LocalDate.now().minusDays(period-1);
   for(Point point:all)if(!point.date.isBefore(cutoff))recent.add(point);
   if(!all.isEmpty()){
    Point last=all.get(all.size()-1);
    v.setTextViewText(R.id.widget_weight,String.format(Locale.KOREA,"%.1f kg",last.kg));
    if(recent.size()>1){
     double delta=recent.get(recent.size()-1).kg-recent.get(0).kg;
-    v.setTextViewText(R.id.widget_delta,String.format(Locale.KOREA,"최근 7일 %+.1f kg",delta));
+    v.setTextViewText(R.id.widget_delta,String.format(Locale.KOREA,"%s 변화 %+.1f kg",periodTitle,delta));
     v.setTextColor(R.id.widget_delta,delta<0?(darkWallpaper?AQUA:GREEN):delta>0?0xffFF9566:muted);
    } else {
-    v.setTextViewText(R.id.widget_delta,"7일 기록이 더 필요해요");
+    v.setTextViewText(R.id.widget_delta,recent.isEmpty()?periodTitle+" 기록 없음":periodTitle+" 기록 1건");
     v.setTextColor(R.id.widget_delta,muted);
    }
   }else{
@@ -152,6 +178,13 @@ public class WeightWidgetProvider extends AppWidgetProvider {
   toggle.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,id);
   PendingIntent style=PendingIntent.getBroadcast(c,id,toggle,PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
   v.setOnClickPendingIntent(R.id.widget_mode,style);
+  Intent choose=new Intent(c,WeightWidgetProvider.class);
+  choose.setAction(CHANGE_PERIOD);
+  choose.setData(Uri.parse("bodylog://widget/range/"+id));
+  choose.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID,id);
+  PendingIntent chooseRange=PendingIntent.getBroadcast(c,id,choose,
+   PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
+  v.setOnClickPendingIntent(R.id.widget_range,chooseRange);
   mgr.updateAppWidget(id,v);
  }
 }
