@@ -9,8 +9,8 @@ android {
         applicationId 'com.bodylog.personal.stable'
         minSdk 26
         targetSdk 34
-        versionCode 101
-        versionName '1.1.0'
+        versionCode 102
+        versionName '1.2.0'
     }
 
     signingConfigs {
